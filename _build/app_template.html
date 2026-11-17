@@ -1,0 +1,634 @@
+<title>Reformed Quizzes</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Quizzes on the Canons of Dort, the Westminster Confession, and Reformed systematic theology, with AI rounds of new questions.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* Layout: one 680px column. Views: hub, quiz start, question, results, AI writing. Burgundy on warm paper; a warm dark variant. */
+:root {
+  --bg: #FAF8F5; --surface: #FFFFFF; --text: #2C2C2C; --text-secondary: #5A5A5A;
+  --accent: #7B3B3B; --accent-hover: #5E2D2D; --on-accent: #FFFFFF;
+  --correct: #2D6A4F; --correct-bg: #E9F5EE;
+  --incorrect: #9B2C2C; --incorrect-bg: #FDE8E8;
+  --border: #E0DCD6; --option-hover: #F3F0EB; --selected: #EDE7DD; --selected-border: #7B3B3B;
+  --shadow: 0 1px 3px rgba(60, 40, 30, .06);
+  --serif: "Libre Baskerville", Georgia, "Times New Roman", serif;
+  --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #1C1816; --surface: #26211E; --text: #EDE6DF; --text-secondary: #B5ABA2;
+  --accent: #D9938A; --accent-hover: #E8ABA3; --on-accent: #1C1816;
+  --correct: #7CC7A0; --correct-bg: #1E3328; --incorrect: #F08C8C; --incorrect-bg: #3A1F1F;
+  --border: #3A332E; --option-hover: #2E2824; --selected: #3A2C2A; --selected-border: #D9938A;
+  --shadow: 0 1px 3px rgba(0, 0, 0, .3); color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --bg: #1C1816; --surface: #26211E; --text: #EDE6DF; --text-secondary: #B5ABA2;
+  --accent: #D9938A; --accent-hover: #E8ABA3; --on-accent: #1C1816;
+  --correct: #7CC7A0; --correct-bg: #1E3328; --incorrect: #F08C8C; --incorrect-bg: #3A1F1F;
+  --border: #3A332E; --option-hover: #2E2824; --selected: #3A2C2A; --selected-border: #D9938A;
+  --shadow: 0 1px 3px rgba(0, 0, 0, .3); color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 16px; line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: max(36px, env(safe-area-inset-top, 0px)) max(48px, env(safe-area-inset-bottom, 0px));
+  -webkit-text-size-adjust: 100%;
+}
+.wrap { max-width: 680px; margin: 0 auto; }
+a { color: var(--accent); }
+.crumb { font-size: 14px; margin-bottom: 24px; }
+.crumb a { text-decoration: none; display: inline-block; padding: 8px 0; } .crumb a:hover { text-decoration: underline; }
+.eyebrow { font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); margin: 0 0 14px; }
+h1 { font-family: var(--serif); font-weight: 700; font-size: 36px; line-height: 1.18; margin: 0 0 10px; text-wrap: balance; }
+.subtitle { font-family: var(--serif); font-style: italic; color: var(--text-secondary); font-size: 17px; margin: 0 0 22px; max-width: 56ch; }
+.lede { color: var(--text-secondary); max-width: 60ch; margin: 0 0 12px; }
+.meta { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 13.5px; color: var(--text-secondary); margin: 18px 0 26px; }
+.meta b { color: var(--text); font-weight: 600; }
+.btn {
+  appearance: none; border: 1px solid var(--accent); background: var(--accent); color: var(--on-accent); font: 600 15px/1 var(--sans);
+  min-height: 48px; padding: 0 24px; border-radius: 8px; cursor: pointer; transition: background .15s; text-decoration: none;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn:hover:not(:disabled) { background: var(--accent-hover); border-color: var(--accent-hover); }
+.btn:disabled { opacity: .4; cursor: default; }
+.btn.ghost { background: transparent; color: var(--accent); }
+.btn.ghost:hover:not(:disabled) { background: var(--selected); }
+.btn.small { min-height: 40px; padding: 0 16px; font-size: 14px; }
+.btn:focus-visible, .opt:focus-visible, .quiz:focus-visible, a:focus-visible, .linkbtn:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.linkbtn { appearance: none; background: none; border: 0; color: var(--text-secondary); font: 500 13.5px var(--sans); padding: 10px 0; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.linkbtn:hover { color: var(--accent); }
+.row { display: flex; flex-wrap: wrap; gap: 12px; }
+select, textarea { font: 15px var(--sans); color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: 8px; }
+select { min-height: 44px; padding: 0 12px; }
+textarea { width: 100%; min-height: 72px; padding: 10px 12px; resize: vertical; }
+
+/* hub */
+.list { display: flex; flex-direction: column; gap: 14px; }
+.quiz {
+  display: grid; grid-template-columns: 44px 1fr 24px; gap: 14px; align-items: start; text-decoration: none; color: inherit;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 22px 20px; box-shadow: var(--shadow); transition: border-color .15s;
+}
+.quiz:hover { border-color: var(--accent); }
+.num { font-family: var(--serif); font-size: 22px; color: var(--accent); line-height: 1.2; font-variant-numeric: tabular-nums; }
+.qbody { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.qt { font-family: var(--serif); font-weight: 700; font-size: 20px; line-height: 1.3; }
+.qs { font-family: var(--serif); font-style: italic; color: var(--text-secondary); font-size: 14.5px; }
+.qd { font-size: 14.5px; color: var(--text-secondary); margin-top: 6px; }
+.qm { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; font-weight: 500; margin-top: 8px; }
+.qm .best { color: var(--accent); }
+.go { color: var(--accent); font-size: 20px; line-height: 1.2; transition: transform .15s; }
+.quiz:hover .go { transform: translateX(3px); }
+.foot { margin-top: 36px; padding-top: 18px; border-top: 1px solid var(--border); font-size: 12.5px; color: var(--text-secondary); }
+.foot p { margin: 0 0 8px; }
+
+/* panels */
+.panel { margin-top: 28px; border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; background: var(--surface); }
+.panel.ai { border-style: dashed; border-color: var(--accent); }
+.panel h3 { font-family: var(--serif); font-size: 17px; margin: 0 0 6px; }
+.panel p { margin: 0 0 14px; font-size: 14.5px; color: var(--text-secondary); }
+.panel .note { font-size: 13px; margin: 12px 0 0; }
+.panel .err { color: var(--incorrect); font-size: 14px; margin: 12px 0 0; }
+.levels { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px; }
+.levels label { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 14.5px; cursor: pointer; }
+.levels input { accent-color: var(--accent); width: 18px; height: 18px; margin: 0; }
+.levels label:has(input:checked) { border-color: var(--accent); background: var(--selected); }
+.hist { list-style: none; margin: 0; padding: 0; }
+.hist li { display: grid; grid-template-columns: 76px 1fr 64px; gap: 12px; align-items: center; padding: 7px 0; font-size: 13.5px; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; }
+.hist li:last-child { border-bottom: 0; }
+.hist .bar2 { height: 6px; border-radius: 3px; background: var(--border); overflow: hidden; }
+.hist .bar2 i { display: block; height: 100%; background: var(--accent); }
+.hist .k { color: var(--text-secondary); font-size: 12.5px; }
+.hist .sc { text-align: right; font-weight: 600; }
+.reports li { padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+.reports li:last-child { border-bottom: 0; }
+.reports small { color: var(--text-secondary); display: block; }
+.thinking { display: flex; align-items: center; gap: 12px; font-family: var(--serif); font-style: italic; color: var(--text-secondary); margin: 8px 0 18px; }
+.dot { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); animation: pulse 1.2s ease-in-out infinite; }
+@keyframes pulse { 0%, 100% { opacity: .25; } 50% { opacity: 1; } }
+
+/* question */
+.topline { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-size: 13.5px; color: var(--text-secondary); margin-bottom: 10px; font-variant-numeric: tabular-nums; }
+.bar { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; margin-bottom: 24px; }
+.bar > i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .3s ease; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 28px; box-shadow: var(--shadow); }
+.tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; align-items: center; }
+.tag { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+.aitag { font-size: 10.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text-secondary); border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px; }
+.q { font-family: var(--serif); font-size: 19px; line-height: 1.5; margin: 0 0 8px; text-wrap: pretty; }
+.src { font-size: 13px; margin: 0 0 22px; color: var(--text-secondary); }
+.src a { text-decoration: none; } .src a:hover { text-decoration: underline; }
+.opts { display: flex; flex-direction: column; gap: 10px; }
+.opt {
+  display: flex; gap: 14px; align-items: flex-start; width: 100%; min-height: 52px; text-align: left; font: 400 16px/1.5 var(--sans); color: var(--text);
+  background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 13px 14px; cursor: pointer; transition: background .12s, border-color .12s;
+  -webkit-tap-highlight-color: transparent;
+}
+.opt:hover:not(:disabled) { background: var(--option-hover); }
+.opt .l { flex: none; width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--border); display: grid; place-items: center; font-size: 12.5px; font-weight: 600; color: var(--text-secondary); background: var(--bg); }
+.opt.sel { background: var(--selected); border-color: var(--selected-border); }
+.opt.sel .l { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.opt.ok { background: var(--correct-bg); border-color: var(--correct); }
+.opt.ok .l { background: var(--correct); border-color: var(--correct); color: var(--bg); }
+.opt.bad { background: var(--incorrect-bg); border-color: var(--incorrect); }
+.opt.bad .l { background: var(--incorrect); border-color: var(--incorrect); color: var(--bg); }
+.opt:disabled { cursor: default; }
+.fb { margin-top: 18px; border-radius: 8px; padding: 16px 18px; font-size: 15px; line-height: 1.65; }
+.fb.ok { background: var(--correct-bg); border-left: 3px solid var(--correct); }
+.fb.bad { background: var(--incorrect-bg); border-left: 3px solid var(--incorrect); }
+.fb strong { display: block; margin-bottom: 4px; }
+.fb.ok strong { color: var(--correct); } .fb.bad strong { color: var(--incorrect); }
+.fb .more { display: inline-block; margin-top: 10px; font-weight: 600; font-size: 14px; text-decoration: none; padding: 4px 0; }
+.fb .more:hover { text-decoration: underline; }
+.under { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 18px; }
+.report { margin-top: 12px; }
+.report .row { margin-top: 10px; }
+.report .done { color: var(--correct); font-size: 14px; }
+
+/* results */
+.score { font-family: var(--serif); font-size: 64px; line-height: 1; color: var(--accent); margin: 8px 0 6px; font-variant-numeric: tabular-nums; }
+.verdict { font-family: var(--serif); font-style: italic; font-size: 18px; color: var(--text-secondary); margin: 0 0 22px; }
+.best { font-size: 13.5px; color: var(--text-secondary); margin: -10px 0 22px; }
+.rlist { list-style: none; margin: 0 0 28px; padding: 0; border-top: 1px solid var(--border); }
+.rlist li { display: grid; grid-template-columns: 22px 1fr; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 14.5px; }
+.rlist .i { font-weight: 700; }
+.rlist .i.ok { color: var(--correct); } .rlist .i.bad { color: var(--incorrect); }
+.rlist small { display: block; color: var(--text-secondary); font-size: 12.5px; margin-top: 2px; }
+
+@media (max-width: 600px) {
+  body { padding-block: max(20px, env(safe-area-inset-top, 0px)) max(28px, env(safe-area-inset-bottom, 0px)); }
+  h1 { font-size: 28px; } .subtitle { font-size: 16px; }
+  .quiz { grid-template-columns: 30px 1fr; padding: 18px 16px; } .go { display: none; } .num { font-size: 18px; } .qt { font-size: 18px; }
+  .card { padding: 20px 16px; } .q { font-size: 18px; }
+  .opt { padding: 14px 12px; gap: 12px; }
+  .actions .btn, #begin { width: 100%; }
+  .panel { padding: 16px; }
+  .score { font-size: 52px; }
+  .hist li { grid-template-columns: 64px 1fr 56px; }
+}
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <!-- HUB -->
+  <section id="v-hub">
+    <p class="eyebrow">Reformed confessions &amp; doctrine</p>
+    <h1>Reformed Quizzes</h1>
+    <p class="subtitle">Test your reading of the Reformed standards. Each quiz follows its source in order, and each answer explains itself with a citation.</p>
+    <div class="list" id="hubList"></div>
+    <div class="panel" id="reportsPanel" hidden></div>
+    <div class="foot">
+      <p>Texts: <a href="https://www.crcna.org/welcome/beliefs/confessions/canons-dort" target="_blank" rel="noopener">Canons of Dort (CRCNA)</a> · <a href="https://www.opc.org/wcf.html" target="_blank" rel="noopener">Westminster Confession (OPC)</a> · <a href="https://www.opc.org/lc.html" target="_blank" rel="noopener">Larger Catechism (OPC)</a>.</p>
+      <p>Quotations from the Canons of Dort, Heidelberg Catechism and Belgic Confession: Translation © 2011, Faith Alive Christian Resources, Christian Reformed Church in North America.</p>
+      <p>Scores and the record of asked questions stay in this browser only.</p>
+    </div>
+  </section>
+
+  <!-- QUIZ START -->
+  <section id="v-start" hidden>
+    <div class="crumb"><a href="#">← All quizzes</a></div>
+    <h1 id="sTitle"></h1>
+    <p class="subtitle" id="sSub"></p>
+    <p class="lede" id="sDesc"></p>
+    <div class="meta"><span><b id="sCount"></b> core questions</span><span>Options shuffle on each attempt</span><span id="sBest" hidden></span><span id="sAiCount" hidden></span></div>
+    <button class="btn" id="begin">Begin core questions</button>
+    <div class="panel ai" id="aiStart" hidden></div>
+    <div class="panel" id="histPanel" hidden></div>
+  </section>
+
+  <!-- QUESTION -->
+  <section id="v-quiz" hidden>
+    <div class="crumb"><a href="#" id="qBack">← All quizzes</a></div>
+    <div class="topline"><span id="counter"></span><span id="running"></span></div>
+    <div class="bar"><i id="fill"></i></div>
+    <div class="card">
+      <div class="tags"><span class="tag" id="tag"></span><span class="aitag" id="aitag" hidden>AI-written · check the source</span></div>
+      <h2 class="q" id="qtext"></h2>
+      <p class="src" id="src"></p>
+      <div class="opts" id="opts" role="radiogroup"></div>
+      <div id="fb"></div>
+    </div>
+    <div class="under">
+      <button class="linkbtn" id="reportBtn">Report a problem</button>
+      <div class="actions"><button class="btn" id="act" disabled>Check Answer</button></div>
+    </div>
+    <div class="report panel" id="reportBox" hidden></div>
+  </section>
+
+  <!-- RESULTS -->
+  <section id="v-results" hidden>
+    <div class="crumb"><a href="#">← All quizzes</a></div>
+    <h1 id="rTitle"></h1>
+    <div class="score" id="score"></div>
+    <p class="verdict" id="verdict"></p>
+    <p class="best" id="rBest" hidden></p>
+    <ul class="rlist" id="rlist"></ul>
+    <div class="row"><button class="btn ghost" id="again">Retake core questions</button></div>
+    <div class="panel ai" id="aiEnd" hidden></div>
+  </section>
+
+  <!-- AI WRITING -->
+  <section id="v-gen" hidden>
+    <div class="crumb"><a href="#" id="genBack">← All quizzes</a></div>
+    <h1 id="gTitle"></h1>
+    <div class="thinking"><span class="dot"></span><span id="gStatus">Writing new questions…</span></div>
+    <p class="lede">Claude is writing questions that you have not seen yet. This usually takes 30 to 90 seconds. The page then checks each quotation against the confession text and removes any question that fails.</p>
+    <button class="btn ghost" id="gStop">Stop</button>
+  </section>
+</div>
+
+<script>
+const QUIZZES = __DATA__;
+const TEXTS = __TEXTS__;
+const ORDER = Object.keys(QUIZZES);
+const REPO = "https://github.com/saving-the-reformation/reformed-quizzes";
+const URLS = {
+  dort: "https://www.crcna.org/welcome/beliefs/confessions/canons-dort",
+  wcf: "https://www.opc.org/wcf.html",
+  wlc: "https://www.opc.org/lc.html",
+  hc: "https://www.crcna.org/welcome/beliefs/confessions/heidelberg-catechism",
+  bc: "https://www.crcna.org/welcome/beliefs/confessions/belgic-confession",
+  inst: "https://www.ccel.org/ccel/calvin/institutes"
+};
+const ROUND = 10, ASK = 13;
+const LETTERS = ["A", "B", "C", "D"];
+const LEVELS = {
+  beginner: { label: "Beginner", prompt: "LEVEL: BEGINNER. Readers are church members who are new to the confessions. Test the main teaching of each article or chapter in plain words. Wrong options stay believable, but the distinctions are broader. A reader who has read the text once should score 70-85%." },
+  intermediate: { label: "Intermediate", prompt: "LEVEL: INTERMEDIATE. Readers know the confessions well. Test clear teaching and well-known contrasts with rival views (Arminian, Lutheran, Roman Catholic, Anabaptist). A regular reader of the text should score 70-85%." },
+  seminary: { label: "Seminary", prompt: "LEVEL: SEMINARY. Readers study the primary sources and Reformed dogmatics. Test fine distinctions, technical terms and historical context. A careful reader of the sources should score 70-85%." }
+};
+const REASONS = ["The marked answer is wrong", "Two answers could be right", "Misquote or wrong citation", "The wording is unclear", "Something else"];
+const $ = id => document.getElementById(id);
+
+/* ---------- storage (per browser, optional) ---------- */
+function load(key, fallback) { try { const v = JSON.parse(localStorage.getItem(key)); return v == null ? fallback : v; } catch (e) { return fallback; } }
+function save(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {} }
+const bestKey = s => "rq-best-" + s, askedKey = s => "rq-asked-" + s, histKey = s => "rq-hist-" + s;
+
+/* ---------- helpers ---------- */
+function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function words(s) { return new Set(String(s).toLowerCase().replace(/[^a-z0-9 ]+/g, " ").split(" ").filter(w => w.length > 3)); }
+function similar(a, b) { const A = words(a), B = words(b); if (!A.size || !B.size) return 0; let n = 0; A.forEach(w => { if (B.has(w)) n++; }); return n / (A.size + B.size - n); }
+function norm(s) { return " " + String(s).toLowerCase().replace(/[‘’]/g, "'").replace(/[^a-z0-9]+/g, " ").trim() + " "; }
+let CORPUS = null;
+function corpus() { return CORPUS || (CORPUS = norm(TEXTS.wcf + " " + TEXTS.wlc)); }
+/* Every quotation of 3+ words must appear word for word in the WCF or Larger Catechism text. */
+function quotesOk(text) {
+  const qs = []; String(text).replace(/"([^"]+)"|“([^”]+)”/g, (m, a, b) => { qs.push(a || b); return m; });
+  for (const q of qs) for (const seg of q.split(/\.\.\.|…/)) {
+    const n = norm(seg).trim();
+    if (n.split(" ").length < 3) continue;
+    if (!corpus().includes(" " + n + " ")) return false;
+  }
+  return true;
+}
+function urlFor(src, slug) {
+  const s = String(src);
+  if (/dort|canons/i.test(s)) return URLS.dort;
+  if (/larger catechism|\bWLC\b/i.test(s)) return URLS.wlc;
+  if (/\bWCF\b|westminster confession/i.test(s)) return URLS.wcf;
+  if (/heidelberg/i.test(s)) return URLS.hc;
+  if (/belgic/i.test(s)) return URLS.bc;
+  if (/calvin/i.test(s)) return URLS.inst;
+  return slug === "dort" ? URLS.dort : slug === "wcf" ? URLS.wcf : "";
+}
+/* "Read the full article" link for the feedback panel. */
+function fullText(src) {
+  const s = String(src); let m;
+  if ((m = s.match(/\bWCF\s+(\d{1,2})/))) return { href: URLS.wcf + "#Chapter_" + m[1].padStart(2, "0"), label: "Read WCF chapter " + m[1] + " in full" };
+  if (/larger catechism|\bWLC\b/i.test(s)) return { href: URLS.wlc, label: "Read the Larger Catechism" };
+  if ((m = s.match(/Canons of Dort,?\s+(?:Rejection of Errors\s+)?([IV/]+)/i))) return { href: URLS.dort, label: "Read Head " + m[1] + " of the Canons in full" };
+  if (/dort|canons/i.test(s)) return { href: URLS.dort, label: "Read the Canons of Dort in full" };
+  if (/heidelberg/i.test(s)) return { href: URLS.hc, label: "Read the Heidelberg Catechism" };
+  if (/belgic/i.test(s)) return { href: URLS.bc, label: "Read the Belgic Confession" };
+  if (/calvin/i.test(s)) return { href: URLS.inst, label: "Read Calvin's Institutes" };
+  return null;
+}
+function show(id) { ["hub", "start", "quiz", "results", "gen"].forEach(v => $("v-" + v).hidden = v !== id); window.scrollTo(0, 0); }
+function fmtDate(t) { try { return new Date(t).toLocaleDateString(undefined, { month: "short", day: "numeric" }); } catch (e) { return ""; } }
+
+/* ---------- state ---------- */
+let slug = null, round = [], opts = [], idx = 0, picked = null, checked = false, answers = [], isAi = false, roundLevel = null;
+let sample = null, db = null, user = null, aiCtl = null, aiError = "", aiNote = "";
+let level = load("rq-level", "seminary");
+
+/* ---------- hub ---------- */
+function renderHub() {
+  $("hubList").innerHTML = ORDER.map((s, n) => {
+    const q = QUIZZES[s], b = load(bestKey(s), null), asked = load(askedKey(s), []).length;
+    return '<a class="quiz" href="#' + s + '"><span class="num">' + String(n + 1).padStart(2, "0") + '</span><span class="qbody">' +
+      '<span class="qt">' + esc(q.title) + '</span><span class="qs">' + esc(q.subtitle) + '</span><span class="qd">' + esc(q.description) + '</span>' +
+      '<span class="qm"><span>' + q.questions.length + ' core questions</span>' + (b ? '<span class="best">Your best: ' + b.score + ' / ' + b.total + '</span>' : '') +
+      (asked ? '<span>' + asked + ' AI questions answered</span>' : '') + '</span></span><span class="go" aria-hidden="true">→</span></a>';
+  }).join("");
+  document.title = "Reformed Quizzes";
+  show("hub");
+  renderReports();
+}
+
+/* Owner and editors see the problem reports that readers sent. */
+let reportsUnsub = null;
+async function renderReports() {
+  const box = $("reportsPanel");
+  if (!db || !user) { box.hidden = true; return; }
+  let can = false; try { can = await user.canEdit(); } catch (e) {}
+  if (!can) { box.hidden = true; return; }
+  if (reportsUnsub) return;
+  try {
+    reportsUnsub = db.collection("reports").orderBy("at", "desc").limit(50).onSnapshot(snap => {
+      const docs = snap.docs || [];
+      box.hidden = false;
+      box.innerHTML = '<h3>Problem reports (' + docs.length + ')</h3>' + (docs.length ? '<ul class="hist reports">' + docs.map(d => {
+        const r = d.data();
+        return '<li><b>' + esc(r.reason) + '</b> · ' + esc(QUIZZES[r.quiz] ? QUIZZES[r.quiz].title : r.quiz) + (r.ai ? ' · AI question' : '') +
+          '<br>' + esc(r.q) + (r.note ? '<br><i>' + esc(r.note) + '</i>' : '') + '<small>' + esc(r.source || "") + ' · ' + fmtDate(r.at) +
+          ' · <button class="linkbtn" data-del="' + esc(d.id) + '">Mark resolved</button></small></li>';
+      }).join("") + '</ul>' : '<p>No reports yet. Readers send them with the “Report a problem” button under each question.</p>');
+      box.querySelectorAll("[data-del]").forEach(b => b.addEventListener("click", () => {
+        db.collection("reports").doc(b.dataset.del).delete().catch(() => {});
+      }));
+    }, () => { box.hidden = true; });
+  } catch (e) { box.hidden = true; }
+}
+
+/* ---------- quiz start ---------- */
+function renderStart(s) {
+  slug = s; const q = QUIZZES[s];
+  $("sTitle").textContent = q.title; $("sSub").textContent = q.subtitle; $("sDesc").textContent = q.description;
+  $("sCount").textContent = q.questions.length;
+  const b = load(bestKey(s), null);
+  $("sBest").hidden = !b; if (b) $("sBest").textContent = "Your best: " + b.score + " / " + b.total;
+  const asked = load(askedKey(s), []).length;
+  $("sAiCount").hidden = !asked; $("sAiCount").textContent = asked + " AI questions answered";
+  renderAi($("aiStart"), !!b);
+  renderHistory();
+  document.title = q.title + " · Reformed Quizzes";
+  show("start");
+}
+
+function renderHistory() {
+  const h = load(histKey(slug), []), box = $("histPanel");
+  if (!h.length) { box.hidden = true; return; }
+  box.hidden = false;
+  box.innerHTML = '<h3>Your score history</h3><ul class="hist">' + h.slice(-10).reverse().map(r =>
+    '<li><span>' + fmtDate(r.d) + '<br><span class="k">' + (r.k === "ai" ? "AI · " + esc((LEVELS[r.lv] || {}).label || "") : "Core") + '</span></span>' +
+    '<span class="bar2"><i style="width:' + Math.round(r.s / r.t * 100) + '%"></i></span><span class="sc">' + r.s + ' / ' + r.t + '</span></li>').join("") + '</ul>';
+}
+
+function renderAi(box, finishedCore) {
+  if (!sample) { box.hidden = true; return; }
+  box.hidden = false;
+  const q = QUIZZES[slug];
+  box.innerHTML = '<h3>' + (finishedCore ? "Keep going with new questions" : "New questions from Claude") + '</h3>' +
+    '<p>Claude writes ' + ROUND + ' new questions on ' + esc(q.short) + '. It skips every question you have already seen in this browser, so no question repeats. Each round uses your own Claude account.</p>' +
+    '<div class="levels" role="radiogroup" aria-label="Difficulty">' + Object.keys(LEVELS).map(k =>
+      '<label><input type="radio" name="lv-' + box.id + '" value="' + k + '"' + (k === level ? " checked" : "") + '>' + LEVELS[k].label + '</label>').join("") + '</div>' +
+    '<button class="btn" data-ai>Write ' + ROUND + ' new questions</button>' +
+    (aiError ? '<p class="err">' + esc(aiError) + '</p>' : '') +
+    (aiNote ? '<p class="note">' + esc(aiNote) + '</p>' : '') +
+    '<p class="note">' + esc(q.quoteRule) + ' AI questions are not checked by hand, so each one cites its source.</p>';
+  box.querySelectorAll('input[type=radio]').forEach(r => r.addEventListener("change", () => { level = r.value; save("rq-level", level); }));
+  box.querySelector("[data-ai]").addEventListener("click", generate);
+}
+
+/* ---------- AI generation ---------- */
+function buildPrompt(q, seen) {
+  const ground = q.ground === "wcf"
+    ? ["SOURCE TEXT: the Westminster Confession of Faith (OPC text) is between <<< and >>>. Use quotation marks ONLY around words copied exactly from this text or from the Westminster Larger Catechism. The page checks every quotation word for word and deletes any question whose quotation does not match.",
+       "<<<", TEXTS.wcf, ">>>"].join("\n")
+    : "QUOTATIONS: do not use quotation marks anywhere. Paraphrase the source in your own words. The page deletes any question that contains a quotation.";
+  return [
+    "You write multiple-choice quiz questions for a Reformed theology quiz site.",
+    "QUIZ: " + q.title + ". SCOPE: " + q.scope,
+    LEVELS[level].prompt,
+    "",
+    "Write exactly " + ASK + " NEW questions. Put them in the order of the source (" + q.orderNote + ").",
+    "",
+    "RULES",
+    "- Each question has one correct answer and three wrong options. All four options use the same grammar and level of detail, 12-22 words each (8-16 for beginner), within about 15% of each other in length. The correct answer must NOT usually be the longest.",
+    "- Wrong options must sound credible: use a real rival view, a nearby article, or a common misreading. No absurd options, no giveaway words like always/never/only unless every option has them.",
+    "- Vary the question stems. Do not ask for the 'most careful' or 'most nuanced' answer.",
+    "- Only test what the cited source clearly teaches. Avoid points that Reformed theologians dispute, or say in the explanation that they are debated.",
+    "- explanation: 2-4 sentences. Say why the answer is right and why the strongest wrong option fails. Refer to options by their content, never by letter or position (options are shuffled).",
+    "- source: a precise citation in the form " + q.citeForm + ".",
+    "- tag: " + q.tagForm + ".",
+    "",
+    ground,
+    "",
+    "DO NOT REPEAT. The reader has already seen every question below. Do not ask any of them again, and do not rephrase them or test the same point from another angle. Prefer articles, chapters or topics that these questions do not cover.",
+    seen.map((s, i) => (i + 1) + ". " + s).join("\n"),
+    "",
+    'Reply with ONLY a JSON array of ' + ASK + ' objects, no other text, in this shape:',
+    '[{"tag": "...", "q": "question text", "answer": "correct option", "wrong": ["wrong option", "wrong option", "wrong option"], "source": "citation", "explanation": "..."}]'
+  ].join("\n");
+}
+
+function seenStems(s) {
+  const fixed = QUIZZES[s].questions.map(x => x.q);
+  const asked = load(askedKey(s), []);
+  return fixed.concat(asked.slice(-200)).map(t => t.slice(0, 180));
+}
+
+/* Validate, remove repeats, and check quotations. Returns {qs, dropped}. */
+function clean(raw, s) {
+  const out = []; let dropped = 0;
+  if (!Array.isArray(raw)) return { qs: out, dropped };
+  const seen = seenStems(s);
+  for (const r of raw) {
+    if (!r || typeof r !== "object") { dropped++; continue; }
+    const qtext = String(r.q || "").trim(), ans = String(r.answer || "").trim();
+    const wrong = Array.isArray(r.wrong) ? r.wrong.map(w => String(w).trim()).filter(Boolean) : [];
+    const ex = String(r.explanation || "").trim();
+    if (!qtext || !ans || wrong.length !== 3 || wrong.includes(ans)) { dropped++; continue; }
+    const wc = s2 => s2.split(/\s+/).length;
+    if (wc(ans) > Math.max(...wrong.map(wc)) * 1.25) { dropped++; continue; } /* correct answer gives itself away by length */
+    if (seen.concat(out.map(o => o.q)).some(p => similar(p, qtext) >= 0.6)) { dropped++; continue; }
+    const all = [qtext, ans, ex].concat(wrong).join(" \n ");
+    const hasQuote = /"[^"]+"|“[^”]+”/.test(all);
+    if (hasQuote && (QUIZZES[s].ground !== "wcf" ? true : !quotesOk(all))) { dropped++; continue; }
+    const keys = shuffle(LETTERS);
+    out.push({
+      tag: String(r.tag || "").trim() || QUIZZES[s].title, q: qtext,
+      options: [{ text: ans, key: keys[0] }, { text: wrong[0], key: keys[1] }, { text: wrong[1], key: keys[2] }, { text: wrong[2], key: keys[3] }],
+      correct: keys[0], source: String(r.source || "").trim(), sourceUrl: urlFor(r.source, s), explanation: ex, ai: true
+    });
+    if (out.length === ROUND) break;
+  }
+  return { qs: out, dropped };
+}
+
+const ERR = {
+  rate_limited: "Claude is busy or you reached a usage limit. Try again in a few minutes.",
+  session_expired: "Your Claude session expired. Sign in again, then try again.",
+  invalid_json: "Claude's reply was not in the right format. Try again.",
+  refused: "Claude did not write this round. Try again.",
+  empty_completion: "Claude returned nothing. Try again.",
+  upstream_error: "The connection failed. Try again."
+};
+
+async function generate() {
+  if (!sample) return;
+  const s = slug, q = QUIZZES[s];
+  aiError = ""; aiNote = ""; aiCtl = new AbortController();
+  $("gTitle").textContent = q.title + " · " + LEVELS[level].label; $("gStatus").textContent = "Writing new questions…";
+  show("gen");
+  try {
+    const raw = await sample.json(buildPrompt(q, seenStems(s)), {
+      signal: aiCtl.signal, cache: false,
+      onText: () => { $("gStatus").textContent = "Writing… almost there"; }
+    });
+    const { qs, dropped } = clean(raw, s);
+    if (qs.length < 3) { aiError = "Claude could not write enough new questions that passed the checks this time. Try again."; renderStart(s); return; }
+    aiNote = dropped ? "The checks removed " + dropped + " question" + (dropped > 1 ? "s" : "") + " from the last round (a repeat or a quotation that did not match the text)." : "";
+    startRound(qs, true);
+  } catch (e) {
+    const code = e && e.code;
+    if (code === "cancelled") { renderStart(s); return; }
+    if (["not_granted", "sampling_disabled", "not_declared", "capability_disabled", "capability_removed"].includes(code)) { sample = null; renderStart(s); return; }
+    aiError = ERR[code] || ERR.upstream_error;
+    renderStart(s);
+  }
+}
+
+/* ---------- running a round ---------- */
+function startRound(qs, ai) {
+  round = qs; isAi = ai; roundLevel = ai ? level : null; idx = 0; answers = [];
+  opts = round.map(q => shuffle(q.options));
+  show("quiz"); render();
+}
+
+function render() {
+  const q = round[idx]; picked = null; checked = false;
+  $("counter").textContent = (isAi ? "AI round · " : "") + "Question " + (idx + 1) + " of " + round.length;
+  const right = answers.filter(a => a.ok).length;
+  $("running").textContent = idx ? right + " correct so far" : "";
+  $("fill").style.width = (idx / round.length * 100) + "%";
+  $("tag").textContent = q.tag; $("aitag").hidden = !q.ai;
+  $("qtext").textContent = q.q;
+  $("src").innerHTML = q.source ? "Source: " + (q.sourceUrl ? '<a href="' + esc(q.sourceUrl) + '" target="_blank" rel="noopener">' + esc(q.source) + "</a>" : esc(q.source)) : "";
+  $("opts").innerHTML = opts[idx].map((o, i) =>
+    '<button class="opt" role="radio" aria-checked="false" data-key="' + o.key + '"><span class="l">' + LETTERS[i] + "</span><span>" + esc(o.text) + "</span></button>").join("");
+  $("fb").innerHTML = "";
+  $("reportBox").hidden = true; $("reportBtn").hidden = false;
+  $("act").textContent = "Check Answer"; $("act").disabled = true;
+  [...$("opts").children].forEach(b => b.addEventListener("click", () => pick(b)));
+}
+
+function pick(b) {
+  if (checked) return;
+  [...$("opts").children].forEach(x => { x.classList.remove("sel"); x.setAttribute("aria-checked", "false"); });
+  b.classList.add("sel"); b.setAttribute("aria-checked", "true");
+  picked = b.dataset.key; $("act").disabled = false;
+}
+
+function check() {
+  const q = round[idx]; checked = true;
+  const ok = picked === q.correct;
+  answers.push({ ok });
+  if (q.ai) { const a = load(askedKey(slug), []); a.push(q.q); save(askedKey(slug), a.slice(-400)); }
+  [...$("opts").children].forEach(b => {
+    b.disabled = true; b.classList.remove("sel");
+    if (b.dataset.key === q.correct) b.classList.add("ok");
+    else if (b.dataset.key === picked) b.classList.add("bad");
+  });
+  const ft = fullText(q.source);
+  $("fb").innerHTML = '<div class="fb ' + (ok ? "ok" : "bad") + '"><strong>' + (ok ? "Correct." : "Not quite.") + "</strong>" + esc(q.explanation) +
+    (ft ? '<br><a class="more" href="' + esc(ft.href) + '" target="_blank" rel="noopener">' + esc(ft.label) + ' →</a>' : "") + "</div>";
+  $("fill").style.width = ((idx + 1) / round.length * 100) + "%";
+  $("act").textContent = idx === round.length - 1 ? "See Results" : "Next Question";
+  $("act").focus();
+}
+
+/* ---------- report a problem ---------- */
+function openReport() {
+  const q = round[idx], box = $("reportBox");
+  box.hidden = false; $("reportBtn").hidden = true;
+  box.innerHTML = '<h3>Report a problem with this question</h3>' +
+    '<p><label for="rpReason">What is wrong?</label></p>' +
+    '<select id="rpReason">' + REASONS.map(r => '<option>' + esc(r) + '</option>').join("") + '</select>' +
+    '<p style="margin:12px 0 6px"><label for="rpNote">Details (optional)</label></p>' +
+    '<textarea id="rpNote" maxlength="800" placeholder="For example: WCF 11.1 says…"></textarea>' +
+    '<div class="row"><button class="btn small" id="rpSend">Send report</button><button class="btn small ghost" id="rpCancel">Cancel</button></div>';
+  $("rpCancel").addEventListener("click", () => { box.hidden = true; $("reportBtn").hidden = false; });
+  $("rpSend").addEventListener("click", () => sendReport(q));
+}
+
+async function sendReport(q) {
+  const box = $("reportBox");
+  const correctText = (q.options.find(o => o.key === q.correct) || {}).text || "";
+  const r = { quiz: slug, q: q.q, answer: correctText, source: q.source || "", ai: !!q.ai,
+    reason: $("rpReason").value, note: $("rpNote").value.trim().slice(0, 800), at: Date.now() };
+  if (db) {
+    try {
+      $("rpSend").disabled = true;
+      await db.collection("reports").add(r);
+      box.innerHTML = '<p class="done">Thank you. The report was sent to the quiz editor.</p>';
+      return;
+    } catch (e) { $("rpSend").disabled = false; /* fall through to GitHub */ }
+  }
+  const body = "Quiz: " + QUIZZES[slug].title + (r.ai ? " (AI question)" : "") + "\nQuestion: " + r.q + "\nMarked answer: " + r.answer +
+    "\nSource: " + r.source + "\nProblem: " + r.reason + (r.note ? "\n\n" + r.note : "");
+  const href = REPO + "/issues/new?title=" + encodeURIComponent("Quiz problem: " + r.reason) + "&body=" + encodeURIComponent(body);
+  box.innerHTML = '<p>Send the report as a GitHub issue. The link opens a new tab with the details filled in.</p>' +
+    '<a class="btn small" href="' + esc(href) + '" target="_blank" rel="noopener">Open GitHub issue</a>';
+}
+
+/* ---------- results ---------- */
+function finish() {
+  const n = answers.filter(a => a.ok).length, t = round.length, pct = n / t;
+  $("rTitle").textContent = QUIZZES[slug].title + (isAi ? " · AI round" : "");
+  $("score").textContent = n + " / " + t;
+  $("verdict").textContent =
+    pct >= .9 ? "Excellent. You know these texts closely." :
+    pct >= .75 ? "Strong work. A few fine distinctions to review." :
+    pct >= .5 ? "A good start. Read the cited sections and try again." :
+    "Worth another pass. The explanations point to each source.";
+  const h = load(histKey(slug), []); h.push({ d: Date.now(), s: n, t, k: isAi ? "ai" : "core", lv: roundLevel }); save(histKey(slug), h.slice(-50));
+  if (!isAi) {
+    const prev = load(bestKey(slug), null);
+    if (!prev || n > prev.score) save(bestKey(slug), { score: n, total: t });
+    const best = load(bestKey(slug), null);
+    $("rBest").hidden = !best; if (best) $("rBest").textContent = "Your best on the core questions: " + best.score + " / " + best.total;
+  } else {
+    $("rBest").hidden = false; $("rBest").textContent = load(askedKey(slug), []).length + " AI questions answered on this quiz so far.";
+  }
+  $("rlist").innerHTML = round.map((q, i) =>
+    '<li><span class="i ' + (answers[i].ok ? "ok" : "bad") + '">' + (answers[i].ok ? "✓" : "✗") + "</span><span>" + esc(q.q) + "<small>" + esc(q.tag) + (q.source ? " · " + esc(q.source) : "") + "</small></span></li>").join("");
+  aiError = "";
+  renderAi($("aiEnd"), true);
+  show("results");
+}
+
+/* ---------- wiring ---------- */
+$("begin").addEventListener("click", () => startRound(QUIZZES[slug].questions, false));
+$("again").addEventListener("click", () => startRound(QUIZZES[slug].questions, false));
+$("reportBtn").addEventListener("click", openReport);
+$("act").addEventListener("click", () => {
+  if (!checked) { if (picked) check(); return; }
+  if (idx < round.length - 1) { idx++; render(); } else finish();
+});
+$("gStop").addEventListener("click", () => aiCtl && aiCtl.abort());
+$("genBack").addEventListener("click", () => aiCtl && aiCtl.abort());
+
+function route() {
+  const h = location.hash.replace("#", "");
+  if (QUIZZES[h]) renderStart(h); else renderHub();
+}
+window.addEventListener("hashchange", route);
+route();
+
+/* Light up Claude features only where they exist (the Claude artifact). */
+if (window.claude && typeof window.claude.use === "function") {
+  window.claude.use("sample").then(fn => {
+    if (!fn) return;
+    sample = fn;
+    if (!$("v-start").hidden) renderAi($("aiStart"), !!load(bestKey(slug), null));
+    if (!$("v-results").hidden) renderAi($("aiEnd"), true);
+  }).catch(() => {});
+  Promise.all([window.claude.use("db"), window.claude.use("user")]).then(([d, u]) => {
+    db = d; user = u;
+    if (!$("v-hub").hidden) renderReports();
+  }).catch(() => {});
+}
+</script>
